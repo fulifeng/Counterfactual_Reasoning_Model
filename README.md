@@ -373,11 +373,11 @@ While training, the result will be shown on the screen and written into file "cf
 If you have same environment as me, the first five results would be
 
 ```
-epoch:0 train_acc:97.05882352941177 total_val_acc:87.5 total_test_acc:88.5
-epoch:1 train_acc:99.45978391356543 total_val_acc:91.5 total_test_acc:92.75
-epoch:2 train_acc:99.87995198079231 total_val_acc:89.0 total_test_acc:92.75
-epoch:3 train_acc:99.93997599039616 total_val_acc:90.5 total_test_acc:92.5
-epoch:4 train_acc:100.0 total_val_acc:92.0 total_test_acc:92.5
+epoch:0 train_acc:97.05882352941177 val_acc:87.5 test_acc:88.5
+epoch:1 train_acc:99.45978391356543 val_acc:91.5 test_acc:92.75
+epoch:2 train_acc:99.87995198079231 val_acc:89.0 test_acc:92.75
+epoch:3 train_acc:99.93997599039616 val_acc:90.5 test_acc:92.5
+epoch:4 train_acc:100.0 val_acc:92.0 test_acc:92.5
 ```
 
 the final result in final_acc is:
@@ -532,3 +532,4 @@ the final result in final_acc is:
 random seed:4max_val_acc: 94.5 final_test_acc: 94.75
 ```
 
+ The rest of codes are coming soon.
