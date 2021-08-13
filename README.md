@@ -292,6 +292,34 @@ ramdom seed:4 max_val_acc:98.77551020408163 test_acc:98.36065573770492
 
 
 
+##### roberta large CRM generator
+
+We provided a trained generator in random seed 4, you can use this command to get result:
+
+```
+python Sentiment_task/roberta_large_CRM_gen.py --device 0 --epochs 20 --lr 1e-3 --batchsize 4 --run_seed 4 --save_folder ./roberta_large_CRM_gen_result/ --cf_model_folder ./roberta_large_cf_train/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:98.65260691271236 val_acc:93.46938775510205 test_acc:94.67213114754098
+epoch:1 train_acc:98.59402460456943 val_acc:93.46938775510205 test_acc:94.67213114754098
+epoch:2 train_acc:98.53544229642648 val_acc:93.46938775510205 test_acc:94.67213114754098
+epoch:3 train_acc:98.65260691271236 val_acc:93.06122448979592 test_acc:94.67213114754098
+epoch:4 train_acc:98.76977152899825 val_acc:92.24489795918367 test_acc:94.05737704918033
+```
+
+the final result is:
+
+```
+ramdom seed:4 max_val_acc:93.46938775510205 test_acc:94.67213114754098
+```
+
+
+
 ## NLI Task
 
 ### Parameters
@@ -386,6 +414,38 @@ the final result in final_acc is:
 random seed:4max_val_acc: 94.0 final_test_acc: 93.25
 ```
 
+##### Roberta base LF
+
+```
+python NLI_task/roberta_base_LF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_base_LF/ --cf_model_folder ./NLI_tasks/roberta_base_cf/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:99.2797118847539 val_acc:90.5 test_acc:91.0
+epoch:1 train_acc:99.75990396158463 val_acc:92.0 test_acc:93.0
+epoch:2 train_acc:99.87995198079231 val_acc:93.0 test_acc:93.75
+epoch:3 train_acc:99.93997599039616 val_acc:95.0 test_acc:93.75
+epoch:4 train_acc:100.0 val_acc:96.0 test_acc:95.25
+```
+
+the final result in final_acc is:
+
+```
+random seed:4max_val_acc: 96.0 final_test_acc: 95.25
+```
+
+##### Roberta base MF
+
+```
+python NLI_task/roberta_base_MF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_base_MF/ --cf_model_folder ./NLI_tasks/roberta_base_cf/
+```
+
+
+
 ##### Roberta large normal train
 
 ```
@@ -413,7 +473,7 @@ random seed:4orig_val_acc: 90.5orig_test_acc: 86.25
 ##### Roberta large cf  train
 
 ```
-python NLI_task/roberta_large_cf_train.py --device 2 --epochs 10 --lr 1e-5 --batchsize 4 --warm_up_rate 0.1 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_cf/
+python NLI_task/roberta_large_cf_train.py --device 0 --epochs 10 --lr 1e-5 --batchsize 4 --warm_up_rate 0.1 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_cf/
 ```
 
 While training, the result will be shown on the screen and written into file "acc_out" under save_folder, and the final result would be found in final_acc
@@ -458,10 +518,62 @@ the final result in final_acc is:
 random seed:4max_val_acc: 93.5 final_test_acc: 96.0
 ```
 
+##### Roberta large LF
+
+```
+python NLI_task/roberta_large_LF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_LF/ --cf_model_folder ./NLI_tasks/roberta_large_cf/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:97.47899159663865 val_acc:92.0 test_acc:94.5
+epoch:1 train_acc:98.67947178871549 val_acc:89.0 test_acc:94.75
+epoch:2 train_acc:99.2797118847539 val_acc:90.5 test_acc:96.5
+epoch:3 train_acc:99.69987995198079 val_acc:94.5 test_acc:96.25
+epoch:4 train_acc:99.69987995198079 val_acc:93.0 test_acc:96.0
+```
+
+the final result in final_acc is:
+
+```
+random seed:4max_val_acc: 94.5 final_test_acc: 96.25
+```
+
+
+
+##### Roberta large MF
+
+```
+python NLI_task/roberta_large_MF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_MF/ --cf_model_folder ./NLI_tasks/roberta_large_cf/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:98.67947178871549 val_acc:91.5 test_acc:93.25
+epoch:1 train_acc:99.21968787515006 val_acc:92.5 test_acc:93.0
+epoch:2 train_acc:99.21968787515006 val_acc:89.5 test_acc:93.0
+epoch:3 train_acc:99.2797118847539 val_acc:91.0 test_acc:92.25
+epoch:4 train_acc:99.51980792316927 val_acc:89.5 test_acc:91.5
+```
+
+the final result in final_acc is:
+
+```
+random seed:4max_val_acc: 93.0 final_test_acc: 92.5
+```
+
+
+
 ##### Roberta large nli normal train
 
 ```
-nohup python NLI_task/roberta_large_nli_normal_train.py --device 1 --epochs 10 --lr 1e-5 --batchsize 4 --warm_up_rate 0.1 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_normal_train/ &
+nohup python NLI_task/roberta_large_nli_normal_train.py --device 0 --epochs 10 --lr 1e-5 --batchsize 4 --warm_up_rate 0.1 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_normal_train/ &
 ```
 
 While training, the result will be shown on the screen and written into file "acc_out" under save_folder, and the final result would be found in final_acc
@@ -511,7 +623,7 @@ random seed:4total_val_acc: 83.9orig_test_acc: 87.5
 ##### Roberta large nli EF
 
 ```
-python NLI_task/roberta_large_nli_EF.py --device 1 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_EF/ --cf_model_folder ./NLI_tasks/roberta_large_nli_cf/
+python NLI_task/roberta_large_nli_EF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_EF/ --cf_model_folder ./NLI_tasks/roberta_large_nli_cf/
 ```
 
 While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
@@ -532,4 +644,82 @@ the final result in final_acc is:
 random seed:4max_val_acc: 94.5 final_test_acc: 94.75
 ```
 
- The rest of codes are coming soon.
+#####  Roberta large nli LF
+
+```
+python NLI_task/roberta_large_nli_LF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_LF/ --cf_model_folder ./NLI_tasks/roberta_large_nli_cf/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:99.39975990396158 val_acc:93.0 test_acc:92.5
+epoch:1 train_acc:99.57983193277312 val_acc:94.5 test_acc:92.5
+epoch:2 train_acc:99.93997599039616 val_acc:93.5 test_acc:94.0
+epoch:3 train_acc:99.93997599039616 val_acc:93.0 test_acc:94.0
+epoch:4 train_acc:100.0 val_acc:94.5 test_acc:94.5
+```
+
+the final result in final_acc is:
+
+```
+random seed:4max_val_acc: 95.5 final_test_acc: 93.5
+```
+
+
+
+##### Roberta large nli MF
+
+```
+python NLI_task/roberta_large_nli_MF.py --device 0 --epochs 20 --lr 1e-3 --batchsize 8 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_nli_MF/ --cf_model_folder ./NLI_tasks/roberta_large_nli_cf/
+```
+
+While training, the result will be shown on the screen and written into file "cf_inference_out.log" under save_folder, and the final result would be found in final_acc
+
+If you have same environment as me, the first five results would be
+
+```
+epoch:0 train_acc:99.63985594237695 val_acc:92.0 test_acc:94.75
+epoch:1 train_acc:99.81992797118848 val_acc:93.0 test_acc:94.5
+epoch:2 train_acc:97.95918367346938 val_acc:92.0 test_acc:91.5
+epoch:3 train_acc:99.63985594237695 val_acc:90.5 test_acc:90.0
+epoch:4 train_acc:99.81992797118848 val_acc:94.5 test_acc:95.0
+```
+
+the final result in final_acc is:
+
+```
+random seed:4max_val_acc: 96.0 final_test_acc: 94.25
+```
+
+
+
+While exploring this issue, we found that for tasks that a  factual sample with multiple counterfactual samples, we could directly try to generate results after Early Fusion instead of generating different counterfactual samples. The generator, which differs from the standard CRM generator in its loss function (equation 6 in paper), expects the label of the counterfactual sample it generates to be close to all labels that are different from the real sample at the same time. 
+
+This can be formulated as:
+$$
+\omega = \arg\min_\omega r(\boldsymbol{u_c^*,\overline{u}_c}) + \sum_{c\neq y} \gamma l(c, f(\boldsymbol{x^*_c-u_c^*|\hat{\theta}})) + r(\boldsymbol{u,\overline{u}}) +\gamma l(c, f(\boldsymbol{x-u|\hat{\theta}}))
+$$
+
+```
+python NLI_task/roberta_large_CRM_nli_gen.py --device 0 --epochs 20 --lr 1e-3 --batchsize 4 --run_seed 4 --save_folder ./NLI_tasks/roberta_large_CRM_nli_gen_result/ --cf_model_folder ./NLI_tasks/roberta_large_cf_train/
+```
+
+If you have same environment as me, the first five results would be (you can find this in saving folder)
+
+```
+epoch:0 train_acc:93.51740696278512 val_acc:83.0 test_acc:84.75
+epoch:1 train_acc:93.75750300120048 val_acc:84.0 test_acc:84.5
+epoch:2 train_acc:93.6374549819928 val_acc:84.0 test_acc:84.75
+epoch:3 train_acc:93.15726290516207 val_acc:84.0 test_acc:84.5
+epoch:4 train_acc:93.937575030012 val_acc:85.0 test_acc:85.25
+```
+
+the final result is:
+
+```
+random seed:4test acc:86.75
+```
+

@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 #from pytorch_pretrained_bert import BertTokenizer, BertModel
 from transformers import BertModel,BertTokenizer, BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
@@ -33,38 +34,26 @@ parser.add_argument("--lr", type=float, default= 1e-3)
 parser.add_argument("--batchsize", type=int , default= 8)
 parser.add_argument("--epochs", type=int , default= 20)
 parser.add_argument("--run_seed", type = int, default= 4)
-parser.add_argument("--save_folder", type=str, default ="./NLI_tasks/roberta_base_MF/")
+parser.add_argument("--save_folder", type=str, default ="./NLI_tasks/roberta_large_nli_EF/")
 parser.add_argument("--log_name", type= str, default= "cf_inference_out.log")
 parser.add_argument("--plot_name", type = str, default= "result_plot.jpg")
-parser.add_argument("--cf_model_folder", type = str, default="./NLI_tasks/roberta_base_cf/")
+parser.add_argument("--cf_model_folder", type = str, default="./NLI_tasks/roberta_large_nli_cf/")
 args = parser.parse_args()
+
 
 device = torch.device("cuda:"+str(args.device))
 
-tokenizer = AutoTokenizer.from_pretrained("roberta-base")
+tokenizer = AutoTokenizer.from_pretrained("roberta-large-mnli")
 
-class cf_conv_linear_net(nn.Module):
+class cf_conv_linear_net (nn.Module):
     def __init__(self, hidde_channels):
         super().__init__()
         self.conv1 = nn.Conv2d(1, hidde_channels, (3,1))
-    
+        self.fc = nn.Linear(hidde_channels * 3, 3)
     def forward(self, x):
         out = torch.flatten(self.conv1(x), start_dim= 1)
-        return out
+        return self.fc(out)
 
-class self_attention(nn.Module):
-    def __init__(self, embed_dim):
-        super().__init__()
-        self.attetion = nn.MultiheadAttention(embed_dim, 1)
-    def forward(self, x):
-        return self.attetion(x,x,x)[0]
-
-class final_fc(nn.Module):
-    def __init__(self, in_size, out_size):
-        super().__init__()
-        self.fc = nn.Linear(in_size, out_size)
-    def forward(self, x):
-        return self.fc(x)
 
 def get_label(text):
     if text == "neutral":
@@ -113,6 +102,7 @@ def create_batch_with_delta_cf(orig_data, cf_data, batchsize, model, tokenizer):
             batch_list.append((label, delta_embed_list, output_list))
     return batch_list
 
+
 def calc_cf_sent_list(sent_list, model, tokenizer):
     model.eval()
     with torch.no_grad():
@@ -129,7 +119,7 @@ def isNan_2(a):
 
 def mk_dir(path):
     try:
-        os.makedirs(path)
+        os.mkdir(path)
     except:
         pass
 
@@ -189,37 +179,6 @@ def model_test_for_option2(batch_train, classifier, cf_net):
                     correct += 1
     return correct/total * 100
 
-def model_test_for_option3(batch_train, classifier, cf_net, attention_net, final_net):
-    classifier = classifier.eval()
-    cf_net = cf_net.eval()
-    attention_net = attention_net.eval()
-    final_net =final_net.eval()
-    total = 0
-    correct = 0
-    with torch.no_grad():
-        for index in tqdm(range(len(batch_train))):
-            label = batch_train[index][0].to(device)
-            delta_classifier_out = classifier(torch.cat(batch_train[index][1])).view(len(label),4,3)
-            for k in range(len(batch_train[index][2])):
-                label_temp = label[k].view(1)
-                real_classifier1_out = batch_train[index][2][k][-1] 
-                cf_classifier1_out = batch_train[index][2][k][0:4]
-                delta_classifier_out_temp = delta_classifier_out[k]
-                for m in range(4):
-                    input_for_conv_network = torch.cat([real_classifier1_out,cf_classifier1_out[m],delta_classifier_out_temp[m]]).view(1,1,3,3)
-                    if m == 0:
-                        input_for_attention_net = cf_net(input_for_conv_network).view(1,1,-1)
-                    else:
-                        input_for_attention_net = torch.cat([input_for_attention_net, cf_net(input_for_conv_network).view(1,1,-1)],dim=0)
-                input_for_final_net = attention_net(input_for_attention_net)
-                input_for_final_net = input_for_final_net.mean(0)
-                output = final_net(input_for_final_net)
-                _,predict = torch.max(output,1)
-                total += 1
-                if label_temp == predict:
-                    correct += 1
-    return correct/total * 100
-
 def shuffle_from_bs_1(batch_train_bs_1, batchsize):
     batch_train_bs = copy.deepcopy(batch_train_bs_1)
     count = 0
@@ -255,22 +214,18 @@ def setup_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 
-seed = args.run_seed
+seed= args.run_seed
 max_val_acc = 0
 final_test_acc = 0
 setup_seed(seed)
-model = torch.load(args.cf_model_folder + "/" + str(seed) + "/roberta-base.pt", map_location= device)
+model = torch.load(args.cf_model_folder +str(seed) + "/roberta-large-mnli.pt", map_location= device)
 batch_train_bs_1 = create_batch_with_delta_cf(orig_train_data, revised_train_data, 1, model, tokenizer)
 batch_val = create_batch_with_delta_cf(orig_val_data, revised_val_data, args.batchsize, model, tokenizer)
 batch_test = create_batch_with_delta_cf(orig_test_data, revised_test_data, args.batchsize, model, tokenizer)
 classifier = copy.deepcopy(model.classifier).to(device)
 cf_net = cf_conv_linear_net(10).to(device)
-attention_net = self_attention(30).to(device)
-final_net = final_fc(30,3).to(device)
 optimizer = optim.Adam([{"params":cf_net.parameters(),"lr":args.lr},
-                        {"params":classifier.parameters(),"lr":args.lr},
-                        {"params":final_net.parameters(),"lr":args.lr},
-                        {"params":attention_net.parameters(),"lr":args.lr}])
+                        {"params":classifier.parameters(),"lr":args.lr}])
 Loss = nn.CrossEntropyLoss()
 acc_train_list = []
 acc_val_list = []
@@ -289,46 +244,35 @@ for i in range(0, args.epochs):
             f.write("net_struc:" + "\n")
             print(cf_net, file=f)
             print(classifier, file=f)
-            acc1 = model_test_for_option3(batch_train, classifier, cf_net, attention_net, final_net)
-            acc2 = model_test_for_option3(batch_val, classifier, cf_net, attention_net, final_net)
-            acc3 = model_test_for_option3(batch_test,classifier, cf_net, attention_net, final_net)
-            # acc_train_list.append(acc1)
-            # acc_val_list.append(acc2)
-            # acc_test_list.append(acc3)
-            # f.write("before optim:" + str(i) + " train_acc:" + str(acc1) + " total_val_acc:" + str(acc2) + " total_test_acc:" + str(acc3) + "\n")
     cf_net = cf_net.train()
     classifier = classifier.train()
-    attention_net = attention_net.train()
-    final_net = final_net.train()
     for index in tqdm(range(len(batch_train))):
         loss = 0
         # encoder = tokenizer(batch_train[index][1], padding=True, truncation=True, max_length=512, return_tensors='pt' )
         label = batch_train[index][0].to(device)
         delta_classifier_out = classifier(torch.cat(batch_train[index][1])).view(len(label),4,3)
         for k in range(len(batch_train[index][2])):
-            label_temp = label[k].view(1)
+            label_temp = label[k]
             real_classifier1_out = batch_train[index][2][k][-1] 
             cf_classifier1_out = batch_train[index][2][k][0:4]
             delta_classifier_out_temp = delta_classifier_out[k]
             for m in range(4):
                 input_for_conv_network = torch.cat([real_classifier1_out,cf_classifier1_out[m],delta_classifier_out_temp[m]]).view(1,1,3,3)
-                if m == 0:
-                    input_for_attention_net = cf_net(input_for_conv_network).view(1,1,-1)
+                if m==0:
+                    conv_network_out = cf_net(input_for_conv_network)
                 else:
-                    input_for_attention_net = torch.cat([input_for_attention_net, cf_net(input_for_conv_network).view(1,1,-1)],dim=0)
-            input_for_final_net = attention_net(input_for_attention_net)
-            input_for_final_net = input_for_final_net.mean(0)
-            output = final_net(input_for_final_net)
-            loss += Loss(output,label_temp)
+                    conv_network_out += cf_net(input_for_conv_network)
+            conv_network_out = conv_network_out/4
+            loss += Loss(conv_network_out, label_temp.view(1))
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         loss_total += loss.item()
     print(loss_total/len(batch_train))
     # batch_train = create_batch(train_data, 64)
-    acc1 = model_test_for_option3(batch_train, classifier, cf_net, attention_net, final_net)
-    acc2 = model_test_for_option3(batch_val, classifier, cf_net, attention_net, final_net)
-    acc3 = model_test_for_option3(batch_test,classifier, cf_net, attention_net, final_net)
+    acc1 = model_test_for_option2(batch_train, classifier, cf_net)
+    acc2 = model_test_for_option2(batch_val, classifier, cf_net)
+    acc3 = model_test_for_option2(batch_test, classifier, cf_net)
     acc_train_list.append(acc1)
     acc_val_list.append(acc2)
     acc_test_list.append(acc3)
@@ -340,7 +284,6 @@ for i in range(0, args.epochs):
     with open(final_saving_folder + "/" + args.log_name,"a+") as f:
         if i == 0:
             f.write("settings:\n")
-            f.write("lr:" + str(args.lr) + "\n")
             f.write("net_struc:" + "\n")
             print(cf_net, file=f)
         f.write("epoch:" + str(i) + " train_acc:" + str(acc1) + " val_acc:" + str(acc2) + " test_acc:" + str(acc3) + "\n")

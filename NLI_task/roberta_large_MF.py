@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 #from pytorch_pretrained_bert import BertTokenizer, BertModel
 from transformers import BertModel,BertTokenizer, BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
@@ -33,15 +34,15 @@ parser.add_argument("--lr", type=float, default= 1e-3)
 parser.add_argument("--batchsize", type=int , default= 8)
 parser.add_argument("--epochs", type=int , default= 20)
 parser.add_argument("--run_seed", type = int, default= 4)
-parser.add_argument("--save_folder", type=str, default ="./NLI_tasks/roberta_base_MF/")
+parser.add_argument("--save_folder", type=str, default ="./NLI_tasks/roberta_large_LF/")
 parser.add_argument("--log_name", type= str, default= "cf_inference_out.log")
 parser.add_argument("--plot_name", type = str, default= "result_plot.jpg")
-parser.add_argument("--cf_model_folder", type = str, default="./NLI_tasks/roberta_base_cf/")
+parser.add_argument("--cf_model_folder", type = str, default="./NLI_tasks/roberta_large_cf/")
 args = parser.parse_args()
 
 device = torch.device("cuda:"+str(args.device))
 
-tokenizer = AutoTokenizer.from_pretrained("roberta-base")
+tokenizer = AutoTokenizer.from_pretrained("roberta-large")
 
 class cf_conv_linear_net(nn.Module):
     def __init__(self, hidde_channels):
@@ -73,6 +74,7 @@ def get_label(text):
         return 0
     elif text == "entailment":
         return 2
+
 
 
 def create_batch_with_delta_cf(orig_data, cf_data, batchsize, model, tokenizer):
@@ -113,6 +115,7 @@ def create_batch_with_delta_cf(orig_data, cf_data, batchsize, model, tokenizer):
             batch_list.append((label, delta_embed_list, output_list))
     return batch_list
 
+
 def calc_cf_sent_list(sent_list, model, tokenizer):
     model.eval()
     with torch.no_grad():
@@ -129,7 +132,7 @@ def isNan_2(a):
 
 def mk_dir(path):
     try:
-        os.makedirs(path)
+        os.mkdir(path)
     except:
         pass
 
@@ -211,8 +214,8 @@ def model_test_for_option3(batch_train, classifier, cf_net, attention_net, final
                         input_for_attention_net = cf_net(input_for_conv_network).view(1,1,-1)
                     else:
                         input_for_attention_net = torch.cat([input_for_attention_net, cf_net(input_for_conv_network).view(1,1,-1)],dim=0)
-                input_for_final_net = attention_net(input_for_attention_net)
-                input_for_final_net = input_for_final_net.mean(0)
+                input_for_attention_net = attention_net(input_for_attention_net)
+                input_for_final_net = input_for_attention_net.mean(0)
                 output = final_net(input_for_final_net)
                 _,predict = torch.max(output,1)
                 total += 1
@@ -259,8 +262,10 @@ seed = args.run_seed
 max_val_acc = 0
 final_test_acc = 0
 setup_seed(seed)
-model = torch.load(args.cf_model_folder + "/" + str(seed) + "/roberta-base.pt", map_location= device)
+model = torch.load("/share/home/zhangjz/main_experiment_for_nli/roberta_large_cf_train/roberta_large_cf_train_bs_4_lr_1e-5_differernt_random_seed/" +str(seed) + "/roberta-large.pt", map_location= device)
+# model = torch.load("/share/home/zhangjz/bert_nli-master/robert_large_mnli_save_model_20_without_cut/roberta-large-mnlisave_epoch_0.pt", map_location= device)
 batch_train_bs_1 = create_batch_with_delta_cf(orig_train_data, revised_train_data, 1, model, tokenizer)
+#生成之后，batch[2]前4个为反事实样本，最后一个是真实样本
 batch_val = create_batch_with_delta_cf(orig_val_data, revised_val_data, args.batchsize, model, tokenizer)
 batch_test = create_batch_with_delta_cf(orig_test_data, revised_test_data, args.batchsize, model, tokenizer)
 classifier = copy.deepcopy(model.classifier).to(device)
@@ -289,9 +294,9 @@ for i in range(0, args.epochs):
             f.write("net_struc:" + "\n")
             print(cf_net, file=f)
             print(classifier, file=f)
-            acc1 = model_test_for_option3(batch_train, classifier, cf_net, attention_net, final_net)
-            acc2 = model_test_for_option3(batch_val, classifier, cf_net, attention_net, final_net)
-            acc3 = model_test_for_option3(batch_test,classifier, cf_net, attention_net, final_net)
+            # acc1 = model_test_for_option3(batch_train, classifier, cf_net, attention_net, final_net)
+            # acc2 = model_test_for_option3(batch_val, classifier, cf_net, attention_net, final_net)
+            # acc3 = model_test_for_option3(batch_test,classifier, cf_net, attention_net, final_net)
             # acc_train_list.append(acc1)
             # acc_val_list.append(acc2)
             # acc_test_list.append(acc3)
@@ -316,8 +321,8 @@ for i in range(0, args.epochs):
                     input_for_attention_net = cf_net(input_for_conv_network).view(1,1,-1)
                 else:
                     input_for_attention_net = torch.cat([input_for_attention_net, cf_net(input_for_conv_network).view(1,1,-1)],dim=0)
-            input_for_final_net = attention_net(input_for_attention_net)
-            input_for_final_net = input_for_final_net.mean(0)
+            input_for_attention_net = attention_net(input_for_attention_net)
+            input_for_final_net = input_for_attention_net.mean(0)
             output = final_net(input_for_final_net)
             loss += Loss(output,label_temp)
         optimizer.zero_grad()
